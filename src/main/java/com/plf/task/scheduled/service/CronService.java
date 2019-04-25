@@ -1,5 +1,11 @@
-package com.plf.tssk.scheduled.service;
+package com.plf.task.scheduled.service;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -9,8 +15,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
-import com.plf.tssk.scheduled.bean.TaskBean;
-import com.plf.tssk.scheduled.bean.TaskTableBean;
+import com.plf.task.scheduled.bean.TaskBean;
+import com.plf.task.scheduled.bean.TaskTableBean;
 
 @Service
 public class CronService {
@@ -53,6 +59,35 @@ public class CronService {
 		}
 	}
 	
+	public List<Class<?>> getJobClass(String packageName){
+		List<Class<?>> list = new ArrayList<>();
+		try {
+			Enumeration<URL> iterator = Thread.currentThread().getContextClassLoader().getResources(packageName.replace(".", "/"));
+			URL url = null;
+			File file = null;
+			File[] files = null;
+			Class<?> clazz = null;
+			String className=null;
+			while(iterator.hasMoreElements()){
+				url = iterator.nextElement();
+				if("file".equals(url.getProtocol())){
+					file = new File(url.getPath());
+					if(file.isDirectory()){
+						files = file.listFiles();
+						for (File f : files) {
+							className = f.getName();
+							className = className.substring(0,className.lastIndexOf("."));
+							clazz = Thread.currentThread().getContextClassLoader().loadClass(packageName+"."+className);
+							list.add(clazz);
+						}
+					}
+				}
+			}
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
 
 	/**
 	 * 模拟数据库

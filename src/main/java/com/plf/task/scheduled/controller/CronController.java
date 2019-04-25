@@ -1,11 +1,13 @@
-package com.plf.tssk.scheduled.controller;
+package com.plf.task.scheduled.controller;
+
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.plf.tssk.scheduled.bean.TaskBean;
-import com.plf.tssk.scheduled.service.CronService;
+import com.plf.task.scheduled.bean.TaskBean;
+import com.plf.task.scheduled.service.CronService;
 
 
 @RestController
@@ -24,5 +26,10 @@ public class CronController {
 	public String stopCron(Integer id) {
 		cronService.stopTaskBean(id);
 		return "success";
+	}
+	
+	@RequestMapping("/getJobClass")
+	public List<Class<?>> getJobClass(){
+		return cronService.getJobClass("com.plf.task.scheduled.job");
 	}
 }

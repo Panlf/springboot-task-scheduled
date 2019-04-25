@@ -1,4 +1,4 @@
-package com.plf.tssk.scheduled.bean;
+package com.plf.task.scheduled.bean;
 
 public class TaskTableBean {
 
