@@ -19,4 +19,10 @@ public class CronController {
 		TaskBean task=cronService.getCronById(id);
 		return task;
 	}
+	
+	@RequestMapping("/stopCronByid")
+	public String stopCron(Integer id) {
+		cronService.stopTaskBean(id);
+		return "success";
+	}
 }

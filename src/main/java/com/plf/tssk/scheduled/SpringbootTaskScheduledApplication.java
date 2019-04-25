@@ -16,7 +16,7 @@ public class SpringbootTaskScheduledApplication {
 	public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
 		ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
 		threadPoolTaskScheduler.setPoolSize(20);
-		threadPoolTaskScheduler.setThreadNamePrefix("taskExecutor-");
+		threadPoolTaskScheduler.setThreadNamePrefix("threadPoolTaskScheduler-");
 		threadPoolTaskScheduler.setWaitForTasksToCompleteOnShutdown(true);
 		threadPoolTaskScheduler.setAwaitTerminationSeconds(60);
 		return threadPoolTaskScheduler;
