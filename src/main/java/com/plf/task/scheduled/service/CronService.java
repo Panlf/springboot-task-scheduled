@@ -4,80 +4,90 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
+import java.util.Optional;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import com.plf.task.scheduled.bean.TaskBean;
-import com.plf.task.scheduled.bean.TaskTableBean;
+import com.plf.task.scheduled.bean.TaskList;
+import com.plf.task.scheduled.container.MapContainer;
+import com.plf.task.scheduled.repository.TaskListRepository;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class CronService {
 
-	public final static Map<Integer,TaskBean> currentHashMap = new ConcurrentHashMap<>();
-	
 	@Autowired
-	private ThreadPoolTaskScheduler threadPoolTaskScheduler;
+	private TaskListRepository taskListRepository;
+
+	public MapContainer mapContainer = MapContainer.getInstance();
 	
-	
-	public TaskBean getCronById(Integer id){
-		TaskTableBean bean = getDataById(id);
-		TaskBean task=getIncorrentCron(bean);
-		return task;
+	/**
+	 * 添加定时任务列表，并启动
+	 * @param taskList
+	 */
+	public void addTaskList(TaskList taskList){
+		taskList.setCreatetime(new Date());
+		taskList.setStatus(1);
+		taskListRepository.save(taskList);
+		log.info("CronService中的对象为 - "+mapContainer);
+		mapContainer.putMap(taskList);
 	}
 	
-	
-	private TaskBean getIncorrentCron(TaskTableBean bean){
-		TaskBean task =new TaskBean();
-		task.setCron(bean.getCron());
-		String str = bean.getClazz();
-		Object obj=null;
-		try {
-			obj=Class.forName(str).newInstance();
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-			e.printStackTrace();
+	/**
+	 * 暂停定时任务
+	 * @param id
+	 */
+	public void cancelTaskList(Integer id){
+		TaskList taskList = getTaskListById(id);
+		if(taskList==null){
+			return;
 		}
-		task.setTask(obj);
-		ScheduledFuture<?> future = threadPoolTaskScheduler.schedule((Runnable) obj, new CronTrigger(bean.getCron()));
-		task.setFuture(future);
-		currentHashMap.put(bean.getId(), task);
-		return task;
+		taskList.setStatus(2);
+		taskListRepository.save(taskList);
+		mapContainer.cancelMap(id);
 	}
 	
-	public void stopTaskBean(Integer id){
-		TaskBean task = currentHashMap.get(id);
-		ScheduledFuture<?> future = task.getFuture();
-		if(future != null){
-			future.cancel(true);
-		}
-	}
-	
-	public List<Class<?>> getJobClass(String packageName){
+	/**
+	 * 获取所有的某包下所有的类名
+	 * @param packageName
+	 * @return
+	 */
+	public List<Class<?>> getJobClass(String packageName) {
 		List<Class<?>> list = new ArrayList<>();
 		try {
-			Enumeration<URL> iterator = Thread.currentThread().getContextClassLoader().getResources(packageName.replace(".", "/"));
+			Enumeration<URL> iterator = Thread.currentThread().getContextClassLoader()
+					.getResources(packageName.replace(".", "/"));
 			URL url = null;
 			File file = null;
 			File[] files = null;
 			Class<?> clazz = null;
-			String className=null;
-			while(iterator.hasMoreElements()){
+			String className = null;
+			while (iterator.hasMoreElements()) {
 				url = iterator.nextElement();
-				if("file".equals(url.getProtocol())){
+				if ("file".equals(url.getProtocol())) {
 					file = new File(url.getPath());
-					if(file.isDirectory()){
+					if (file.isDirectory()) {
 						files = file.listFiles();
 						for (File f : files) {
 							className = f.getName();
-							className = className.substring(0,className.lastIndexOf("."));
-							clazz = Thread.currentThread().getContextClassLoader().loadClass(packageName+"."+className);
+							className = className.substring(0, className.lastIndexOf("."));
+							clazz = Thread.currentThread().getContextClassLoader()
+									.loadClass(packageName + "." + className);
 							list.add(clazz);
 						}
 					}
@@ -90,17 +100,44 @@ public class CronService {
 	}
 
 	/**
-	 * 模拟数据库
+	 * 根据ID获取任务表
+	 * 
 	 * @param id
 	 * @return
 	 */
-	private TaskTableBean getDataById(Integer id){
-		TaskTableBean bean1 = new TaskTableBean(1,"0/2 * * * * *","com.plf.tssk.scheduled.job.MyRunnable");
-		TaskTableBean bean2 = new TaskTableBean(2,"0/5 * * * * *","com.plf.tssk.scheduled.job.MyRunnable2");
-		if(id==1){
-			return bean1;
-		}else{
-			return bean2;
+	public TaskList getTaskListById(Integer id) {
+		Optional<TaskList> optTask = taskListRepository.findById(id);
+		if (optTask.isPresent()) {
+			return optTask.get();
 		}
+		return null;
+	}
+
+	/**
+	 * 根据任务名称分页查找
+	 * @param pageSize
+	 * @param pageNumber
+	 * @param taskname
+	 * @return
+	 */
+	public Page<TaskList> findPageByName(Integer pageSize, Integer pageNumber, String taskname) {
+		Pageable pageable = PageRequest.of(pageNumber, pageSize);
+		Specification<TaskList> spec = new Specification<TaskList>() {
+			
+			private static final long serialVersionUID = -1688480239483372044L;
+
+			@Override
+			public Predicate toPredicate(Root<TaskList> root, CriteriaQuery<?> criteria,
+					CriteriaBuilder criteriaBuilder) {
+				List<Predicate> list = new ArrayList<>();
+				if (taskname != null && taskname.trim().length() > 0) {
+					list.add(criteriaBuilder.like(root.get("taskname").as(String.class), "%" + taskname + "%"));
+				}
+				Predicate[] p = new Predicate[list.size()];
+				return criteriaBuilder.and(list.toArray(p));
+			}
+		};
+
+		return taskListRepository.findAll(spec, pageable);
 	}
 }

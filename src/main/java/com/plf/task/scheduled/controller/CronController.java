@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.plf.task.scheduled.bean.TaskBean;
+import com.plf.task.scheduled.bean.TaskList;
 import com.plf.task.scheduled.service.CronService;
 
 
@@ -16,15 +16,15 @@ public class CronController {
 	@Autowired
 	private CronService cronService;
 	
-	@RequestMapping("/startCronByid")
-	public TaskBean startCron(Integer id) {
-		TaskBean task=cronService.getCronById(id);
-		return task;
+	@RequestMapping("/addCron")
+	public String addCron(TaskList taskList){
+		cronService.addTaskList(taskList);
+		return "success";
 	}
 	
 	@RequestMapping("/stopCronByid")
 	public String stopCron(Integer id) {
-		cronService.stopTaskBean(id);
+		cronService.cancelTaskList(id);
 		return "success";
 	}
 	
