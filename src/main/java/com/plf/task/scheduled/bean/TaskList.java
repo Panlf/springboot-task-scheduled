@@ -24,21 +24,21 @@ public class TaskList {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@ApiModelProperty("主键ID-数据库自增")
+	@ApiModelProperty(value="主键ID-数据库自增",required=false,example="1")
 	private Integer id;
 	
 	/**
 	 * 任务表达式
 	 */
 	@Column
-	@ApiModelProperty("任务表达式")
+	@ApiModelProperty(value="任务表达式",required=true,example="*/5 * * * * ?")
 	private String cron;
 	
 	/**
 	 * 任务全类名
 	 */
 	@Column
-	@ApiModelProperty("任务全类名")
+	@ApiModelProperty(value="任务全类名",required=true,example="com.plf.task.scheduled.job.MyRunnable")
 	private String clazz;
 	
 	/**
@@ -48,21 +48,21 @@ public class TaskList {
 	 * 2 代表 停止
 	 */
 	@Column
-	@ApiModelProperty("任务状态 0 删除 1启动 2 停止")
+	@ApiModelProperty(value="任务状态 0 删除 1启动 2 停止",required=false,example="0")
 	private Integer status;
 	
 	/**
 	 * 任务名
 	 */
 	@Column
-	@ApiModelProperty("任务名")
+	@ApiModelProperty(value="任务名",required=true,example="任务一")
 	private String taskname;
 	
 	/**
 	 * 创建时间
 	 */
 	@Column
-	@ApiModelProperty("创建时间")
+	@ApiModelProperty(value="创建时间",required=false,example="2019-05-07 12:00:00")
 	private Date createtime;
 	
 }

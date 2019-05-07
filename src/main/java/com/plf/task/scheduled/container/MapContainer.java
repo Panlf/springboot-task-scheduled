@@ -81,7 +81,7 @@ public class MapContainer {
 		try {
 			obj = Class.forName(clazz).newInstance();
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-			log.error("putMap时,反射实例化发生错误,错误原因-" + e.getMessage());
+			log.error("putMap时,反射实例化发生错误,错误原因- {}",e.getMessage());
 		}
 		taskListDto.setTask(obj);
 		log.info("ThreadPoolTaskScheduler {}", threadPoolTaskScheduler);
@@ -89,22 +89,45 @@ public class MapContainer {
 				new CronTrigger(taskList.getCron()));
 		taskListDto.setFuture(future);
 		currentHashMap.put(taskList.getId(), taskListDto);
-		log.info("TaskList的实例存储 - " + taskList);
+		log.info("TaskList的实例存储 - {}" , taskList);
 		return taskListDto;
 	}
 
 	/**
-	 * 根据ID暂停任务
-	 * 
+	 * 根据ID暂停任务,同时在容器中删除
 	 * @param id
 	 * @return
 	 */
 	public TaskListDto cancelMap(Integer id) {
-		TaskListDto task = currentHashMap.get(id);
-		ScheduledFuture<?> future = task.getFuture();
-		if (future != null) {
-			future.cancel(true);
+		TaskListDto task = null;
+		if(currentHashMap.containsKey(id)){
+			task = currentHashMap.get(id);
+			ScheduledFuture<?> future = task.getFuture();
+			if (future != null) {
+				future.cancel(true);
+			}
+			//删除任务
+			currentHashMap.remove(id);
 		}
 		return task;
+	}
+	
+	/**
+	 * 根据ID删除,调用暂停的方法
+	 * @param id
+	 * @return
+	 */
+	public TaskListDto deleteMap(Integer id){
+		return cancelMap(id);
+	}
+	
+	/**
+	 * 重新启动
+	 * @param id
+	 * @return
+	 */
+	public TaskListDto restartMap(TaskList taskList) {
+		TaskListDto taskListDto=putMap(taskList);
+		return taskListDto;
 	}
 }

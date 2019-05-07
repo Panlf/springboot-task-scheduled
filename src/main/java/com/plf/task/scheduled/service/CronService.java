@@ -46,6 +46,7 @@ public class CronService {
 		taskListRepository.save(taskList);
 		log.info("CronService中的对象为 - "+mapContainer);
 		mapContainer.putMap(taskList);
+		log.info("执行新增操作,新增的实例为{},新增过后的容器中的任务{}",taskList,mapContainer.getMapContainer().toString());
 	}
 	
 	/**
@@ -57,10 +58,69 @@ public class CronService {
 		if(taskList==null){
 			return;
 		}
+		//定义为暂停 -- 考虑为异步执行
 		taskList.setStatus(2);
 		taskListRepository.save(taskList);
 		mapContainer.cancelMap(id);
 	}
+	
+	/**
+	 * 根据ID删除定时任务
+	 * @param id
+	 */
+	public void deleteTaskList(Integer id){
+		TaskList taskList = getTaskListById(id);
+		if(taskList==null){
+			return;
+		}
+		
+		//定义为删除 -- 考虑为异步执行
+		taskList.setStatus(0);
+		taskListRepository.save(taskList);
+		
+		mapContainer.deleteMap(id);
+		
+		log.info("执行删除操作,删除的ID为{},删除的实例为{},删除过后的容器中的任务{}",id,taskList,mapContainer.getMapContainer().toString());
+	}
+	
+	/**
+	 * 重启启动定时任务
+	 * @param id
+	 */
+	public void restartTaskList(Integer id){
+		TaskList taskList = getTaskListById(id);
+		if(taskList==null){
+			return;
+		}
+		//定义为启动 -- 考虑为异步执行
+		taskList.setStatus(1);
+		taskListRepository.save(taskList);
+		mapContainer.restartMap(taskList);
+		log.info("执行启动操作,启动的ID为{},启动的实例为{},启动过后的容器中的任务{}",id,taskList,mapContainer.getMapContainer().toString());
+	}
+	
+	/**
+	 * 更新定时任务
+	 * @param id
+	 * @param cron
+	 */
+	public void updateTaskList(Integer id,String cron) {
+		
+		TaskList taskList = getTaskListById(id);
+		taskList.setCron(cron);
+		
+		//暂停当前id的任务
+		mapContainer.cancelMap(id);
+		
+		//将任务重置进容器中
+		mapContainer.putMap(taskList);
+		
+		//更新
+		taskListRepository.updateCronById(cron, id);
+		
+		log.info("执行修改操作,修改的ID为{},修改的实例为{},修改过后的容器中的任务{}",id,taskList,mapContainer.getMapContainer().toString());
+	}
+	
 	
 	/**
 	 * 获取所有的某包下所有的类名
@@ -121,7 +181,7 @@ public class CronService {
 	 * @return
 	 */
 	public Page<TaskList> findPageByName(Integer pageSize, Integer pageNumber, String taskname) {
-		Pageable pageable = PageRequest.of(pageNumber, pageSize);
+		Pageable pageable = PageRequest.of(pageNumber-1, pageSize);
 		Specification<TaskList> spec = new Specification<TaskList>() {
 			
 			private static final long serialVersionUID = -1688480239483372044L;
