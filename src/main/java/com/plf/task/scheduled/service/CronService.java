@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import com.plf.task.scheduled.bean.TaskList;
 import com.plf.task.scheduled.container.MapContainer;
-import com.plf.task.scheduled.repository.TaskListRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CronService {
 
 	@Autowired
-	private TaskListRepository taskListRepository;
+	private TaskListService taskListService;
 
 	public MapContainer mapContainer = MapContainer.getInstance();
 	
@@ -43,7 +42,7 @@ public class CronService {
 	public void addTaskList(TaskList taskList){
 		taskList.setCreatetime(new Date());
 		taskList.setStatus(1);
-		taskListRepository.save(taskList);
+		taskListService.save(taskList);
 		log.info("CronService中的对象为 - "+mapContainer);
 		mapContainer.putMap(taskList);
 		log.info("执行新增操作,新增的实例为{},新增过后的容器中的任务{}",taskList,mapContainer.getMapContainer().toString());
@@ -58,9 +57,9 @@ public class CronService {
 		if(taskList==null){
 			return;
 		}
-		//定义为暂停 -- 考虑为异步执行
+		//定义为暂停
 		taskList.setStatus(2);
-		taskListRepository.save(taskList);
+		taskListService.save(taskList);
 		mapContainer.cancelMap(id);
 	}
 	
@@ -74,9 +73,9 @@ public class CronService {
 			return;
 		}
 		
-		//定义为删除 -- 考虑为异步执行
+		//定义为删除 
 		taskList.setStatus(0);
-		taskListRepository.save(taskList);
+		taskListService.save(taskList);
 		
 		mapContainer.deleteMap(id);
 		
@@ -92,9 +91,9 @@ public class CronService {
 		if(taskList==null){
 			return;
 		}
-		//定义为启动 -- 考虑为异步执行
+		//定义为启动 
 		taskList.setStatus(1);
-		taskListRepository.save(taskList);
+		taskListService.save(taskList);
 		mapContainer.restartMap(taskList);
 		log.info("执行启动操作,启动的ID为{},启动的实例为{},启动过后的容器中的任务{}",id,taskList,mapContainer.getMapContainer().toString());
 	}
@@ -116,7 +115,7 @@ public class CronService {
 		mapContainer.putMap(taskList);
 		
 		//更新
-		taskListRepository.updateCronById(cron, id);
+		taskListService.updateProxyCronById(cron, id);
 		
 		log.info("执行修改操作,修改的ID为{},修改的实例为{},修改过后的容器中的任务{}",id,taskList,mapContainer.getMapContainer().toString());
 	}
@@ -166,7 +165,7 @@ public class CronService {
 	 * @return
 	 */
 	public TaskList getTaskListById(Integer id) {
-		Optional<TaskList> optTask = taskListRepository.findById(id);
+		Optional<TaskList> optTask = taskListService.findById(id);
 		if (optTask.isPresent()) {
 			return optTask.get();
 		}
@@ -198,6 +197,6 @@ public class CronService {
 			}
 		};
 
-		return taskListRepository.findAll(spec, pageable);
+		return taskListService.findAll(spec, pageable);
 	}
 }
