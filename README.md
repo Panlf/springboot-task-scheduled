@@ -23,7 +23,8 @@
 
 下载本代码，修改application.properties的数据库配置，启动即可。访问`http://localhost:8080/swagger-ui.html`查看控制器的功能。定时任务写在`com.plf.task.scheduled.job`包下，继承`Runnable`编写业务逻辑代码即可。
 
-
-
+### 更新说明
+#### 2020/10
+1、支持在Runnable任务中进行`Service`调用，可参考`com.plf.task.scheduled.job.MyRunnable2`
 
 

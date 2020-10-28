@@ -1,5 +1,6 @@
 package com.plf.task.scheduled.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.transaction.Transactional;
@@ -8,6 +9,7 @@ import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,15 @@ public class TaskListService {
 	public void save(TaskList taskList) {
 		taskListRepository.save(taskList);
 	}
-	
+
+	/**
+	 * 按照创建时间倒叙输出全部任务
+	 * @return
+	 */
+	public List<TaskList> findAll(){
+		return taskListRepository.findAll(new Sort(Sort.Direction.DESC,"createtime"));
+	}
+
 	public void updateProxyCronById(String cron, Integer id){
 		((TaskListService)AopContext.currentProxy()).updateCronById(cron, id);
 	}

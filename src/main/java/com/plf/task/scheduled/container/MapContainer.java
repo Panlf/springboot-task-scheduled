@@ -79,8 +79,8 @@ public class MapContainer {
 		String clazz = taskList.getClazz();
 		Object obj = null;
 		try {
-			obj = Class.forName(clazz).newInstance();
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			obj = Class.forName(clazz).getDeclaredConstructor().newInstance();
+		} catch (Exception e) {
 			log.error("putMap时,反射实例化发生错误,错误原因- {}",e.getMessage());
 		}
 		taskListDto.setTask(obj);
