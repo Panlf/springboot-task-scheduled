@@ -2,6 +2,9 @@ package com.plf.task.scheduled;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -31,5 +34,12 @@ public class SpringbootTaskScheduledApplication {
 		threadPoolTaskScheduler.setAwaitTerminationSeconds(60);
 		log.info("已经载入ThreadPoolTaskScheduler的Bean对象,对象为{}",threadPoolTaskScheduler);
 		return threadPoolTaskScheduler;
+	}
+
+	@Bean
+	public ConfigurableServletWebServerFactory webServerFactory() {
+		TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
+		factory.addConnectorCustomizers((TomcatConnectorCustomizer) connector -> connector.setProperty("relaxedQueryChars", "|{}[]\\"));
+		return factory;
 	}
 }

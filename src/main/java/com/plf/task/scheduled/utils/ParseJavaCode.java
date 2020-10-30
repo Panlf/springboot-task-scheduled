@@ -47,7 +47,7 @@ public class ParseJavaCode {
     private static final List<String> options = new ArrayList<>();
 
     static {
-        //options.add("-Xlint:unchecked");
+        options.add("-Xlint:unchecked");
         options.add("-verbose");
         options.add("-source");
         options.add("11");
@@ -231,6 +231,7 @@ public class ParseJavaCode {
                 "		System.out.println(\"任务一----\" + new Date());\r\n" +
                 "	}\r\n" +
                 "}";
+
         ParseJavaCode compiler = new ParseJavaCode();
         try {
             Class<?> cla = compiler.compile(code);
