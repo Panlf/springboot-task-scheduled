@@ -36,6 +36,10 @@ public class SpringbootTaskScheduledApplication {
 		return threadPoolTaskScheduler;
 	}
 
+	/**
+	 * 解决url传参存在特殊字符
+	 * @return
+	 */
 	@Bean
 	public ConfigurableServletWebServerFactory webServerFactory() {
 		TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
